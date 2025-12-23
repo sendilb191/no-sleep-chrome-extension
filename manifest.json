@@ -3,7 +3,7 @@
   "name": "No Sleep",
   "version": "1.0.0",
   "description": "Prevents your computer from sleeping by keeping Chrome active",
-  "permissions": ["power", "notifications", "storage", "offscreen"],
+  "permissions": ["power", "notifications", "storage", "offscreen", "alarms"],
   "background": {
     "service_worker": "background.js"
   },
