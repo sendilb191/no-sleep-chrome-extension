@@ -101,6 +101,58 @@
         background: rgba(255, 255, 255, 0.2);
         border-color: white;
       }
+
+      .api-status {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 15px;
+        text-align: left;
+      }
+
+      .api-status-title {
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.9;
+      }
+
+      .api-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        padding: 4px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .api-item:last-child {
+        border-bottom: none;
+      }
+
+      .api-name {
+        opacity: 0.9;
+      }
+
+      .api-badge {
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .api-badge.supported {
+        background: #10b981;
+        color: white;
+      }
+
+      .api-badge.unsupported {
+        background: #ef4444;
+        color: white;
+      }
     </style>
   </head>
   <body>
@@ -115,6 +167,11 @@
       <button class="toggle-btn" id="toggleBtn">Loading...</button>
 
       <button class="test-btn" id="testBtn">🔔 Test Notification</button>
+
+      <div class="api-status">
+        <div class="api-status-title">API Support Status</div>
+        <div id="apiStatusList"></div>
+      </div>
 
       <div class="info">
         Prevents your computer from sleeping while enabled. Works across all

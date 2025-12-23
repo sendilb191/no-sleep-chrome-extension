@@ -73,3 +73,39 @@ function updateUI(enabled) {
     toggleBtn.className = "toggle-btn disabled";
   }
 }
+
+// Check and display API support status
+function checkApiSupport() {
+  const apiStatusList = document.getElementById("apiStatusList");
+
+  const apis = [
+    { name: "Power API", supported: typeof chrome?.power !== "undefined" },
+    {
+      name: "Notifications",
+      supported: typeof chrome?.notifications !== "undefined",
+    },
+    { name: "Storage", supported: typeof chrome?.storage !== "undefined" },
+    { name: "Offscreen", supported: typeof chrome?.offscreen !== "undefined" },
+    { name: "Alarms", supported: typeof chrome?.alarms !== "undefined" },
+    {
+      name: "Battery API",
+      supported: typeof navigator?.getBattery === "function",
+    },
+  ];
+
+  apiStatusList.innerHTML = apis
+    .map(
+      (api) => `
+    <div class="api-item">
+      <span class="api-name">${api.name}</span>
+      <span class="api-badge ${api.supported ? "supported" : "unsupported"}">
+        ${api.supported ? "✓ OK" : "✗ Fail"}
+      </span>
+    </div>
+  `
+    )
+    .join("");
+}
+
+// Initialize API status check
+checkApiSupport();

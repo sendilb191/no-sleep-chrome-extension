@@ -104,10 +104,24 @@ function updateIconBadge() {
   }
 }
 
+// Check if power API is supported
+function isPowerApiSupported() {
+  return typeof chrome !== "undefined" && typeof chrome.power !== "undefined";
+}
+
 // Enable no-sleep mode
 async function enableNoSleep() {
-  // Request system to stay awake (prevents display and system from sleeping)
-  chrome.power.requestKeepAwake("system");
+  if (!isPowerApiSupported()) {
+    console.error("chrome.power API is not supported in this browser");
+    showNotification(
+      "Not Supported",
+      "This browser doesn't support the power API"
+    );
+    return;
+  }
+
+  // Request display to stay awake (prevents display from turning off and screen from locking)
+  chrome.power.requestKeepAwake("display");
   console.log("No Sleep mode enabled");
   updateIconBadge();
 
