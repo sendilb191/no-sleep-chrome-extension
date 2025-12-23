@@ -1,6 +1,6 @@
-# ⚡ No Sleep Chrome Extension
+# ⚡ No Sleep Browser Extension
 
-A Chrome extension that prevents your computer from sleeping by keeping Chrome active in the background. Includes sound notifications for battery alerts.
+A browser extension that prevents your computer from sleeping by keeping the browser active in the background. Works with Chrome, Edge, and other Chromium-based browsers. Includes sound notifications for battery alerts.
 
 ## Features
 
@@ -9,16 +9,16 @@ A Chrome extension that prevents your computer from sleeping by keeping Chrome a
 ✅ **Sound notifications** - Plays audio alerts with system notifications  
 ✅ **Low battery warning** - Alerts when battery drops below 20% (not charging)  
 ✅ **Full battery alert** - Alerts when battery is above 95% (while charging)  
-✅ **Works across all apps/tabs** - Prevents sleep system-wide while Chrome is running  
+✅ **Works across all apps/tabs** - Prevents sleep system-wide while the browser is running  
 ✅ **Simple toggle interface** - Easy one-click enable/disable
 
 ## How It Works
 
 ### Core Functionality
 
-- Uses Chrome's `power` API with `requestKeepAwake('system')` to prevent sleep
+- Uses the browser's `power` API with `requestKeepAwake('system')` to prevent sleep
 - Prevents both display and system sleep when enabled
-- Persists your enable/disable preference using Chrome's storage API
+- Persists your enable/disable preference using the browser's storage API
 
 ### Battery Monitoring
 
@@ -29,9 +29,9 @@ A Chrome extension that prevents your computer from sleeping by keeping Chrome a
 
 ### Sound Notifications
 
-- Uses Chrome's Offscreen API to play audio (required in Manifest V3)
+- Uses the Offscreen API to play audio (required in Manifest V3)
 - Service workers cannot play audio directly, so an offscreen document handles playback
-- Custom notification sound plays alongside Chrome notifications
+- Custom notification sound plays alongside browser notifications
 
 ## Project Structure
 
@@ -72,7 +72,7 @@ The main service worker that runs continuously:
 - **Battery Monitoring**: `monitorBattery()` uses Battery API with event listeners
 - **Notifications**: `showNotification()` displays alerts with sound
 - **Offscreen Audio**: `setupOffscreenDocument()` and `playNotificationSound()` handle audio
-- **Keep Alive**: Uses Chrome alarms to prevent service worker termination
+- **Keep Alive**: Uses browser alarms to prevent service worker termination
 
 ### `popup.html` & `popup.js`
 
@@ -91,6 +91,16 @@ Hidden document for audio playback (Manifest V3 requirement):
 - Required because service workers cannot access Audio API
 
 ## Installation
+
+### For Microsoft Edge
+
+1. Open Edge and navigate to `edge://extensions/`
+2. Enable "Developer mode" (toggle in left sidebar)
+3. Click "Load unpacked"
+4. Select this extension folder
+5. The extension icon should appear in your toolbar
+
+### For Google Chrome
 
 1. Open Chrome and navigate to `chrome://extensions/`
 2. Enable "Developer mode" (toggle in top-right corner)
@@ -130,22 +140,24 @@ You'll receive sound notifications when:
 
 ## Technical Details
 
-- **Manifest Version**: 3 (latest Chrome extension standard)
+- **Manifest Version**: 3 (latest extension standard)
+- **Compatibility**: Chrome, Edge, and Chromium-based browsers
 - **Service Worker**: Persistent background script
 - **APIs Used**:
-  - Chrome Power API
-  - Chrome Notifications API
-  - Chrome Storage API
-  - Chrome Offscreen API
+  - Power API
+  - Notifications API
+  - Storage API
+  - Offscreen API
   - Battery Status API (Web API)
-  - Chrome Alarms API
+  - Alarms API
 
 ## Notes
 
-- Extension only works when Chrome is running
+- Extension only works when the browser is running
 - Battery API may not work on desktop PCs without batteries
 - Service worker stays active using periodic alarms (1-minute interval)
 - Sound plays through offscreen document (Manifest V3 limitation)
+- Works on Chrome, Edge, Brave, and other Chromium browsers
 
 ## License
 

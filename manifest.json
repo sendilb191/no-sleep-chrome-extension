@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "No Sleep",
   "version": "1.0.0",
-  "description": "Prevents your computer from sleeping by keeping Chrome active",
+  "description": "Prevents your computer from sleeping by keeping the browser active",
   "permissions": ["power", "notifications", "storage", "offscreen", "alarms"],
   "background": {
     "service_worker": "background.js"
