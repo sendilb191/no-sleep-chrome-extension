@@ -2,162 +2,292 @@
 
 A browser extension that prevents your computer from sleeping by keeping the browser active in the background. Works with Chrome, Edge, and other Chromium-based browsers. Includes sound notifications for battery alerts.
 
+## What This App Does
+
+This extension solves a common problem: **your computer going to sleep when you need it to stay awake**. Whether you're:
+
+- Downloading large files
+- Running long processes
+- Presenting content
+- Monitoring dashboards
+- Or just want your screen to stay on
+
+Simply enable the extension and your computer won't sleep until you disable it. You'll also get audio alerts when your battery is low or fully charged.
+
 ## Features
 
-✅ **Runs in background continuously** - Service worker keeps running even when you close the popup  
-✅ **Battery API integration** - Monitors battery level and charging status  
-✅ **Sound notifications** - Plays audio alerts with system notifications  
-✅ **Low battery warning** - Alerts when battery drops below 20% (not charging)  
-✅ **Full battery alert** - Alerts when battery is above 95% (while charging)  
-✅ **Works across all apps/tabs** - Prevents sleep system-wide while the browser is running  
-✅ **Simple toggle interface** - Easy one-click enable/disable
+✅ **Runs in background continuously** - Works even when popup is closed  
+✅ **Toolbar badge indicator** - Shows "ON" badge when active  
+✅ **Battery monitoring** - Real-time battery level and charging status  
+✅ **Sound notifications** - Audio plays 2x with 2-second intervals  
+✅ **Low battery warning** - Alerts at < 20% when not charging  
+✅ **Full battery alert** - Alerts at > 95% when charging  
+✅ **Test button** - Verify notifications and sound are working  
+✅ **Works across all apps** - System-wide sleep prevention  
+✅ **Persists preference** - Remembers your setting after browser restart
 
 ## How It Works
 
-### Core Functionality
+### Architecture Overview
 
-- Uses the browser's `power` API with `requestKeepAwake('system')` to prevent sleep
-- Prevents both display and system sleep when enabled
-- Persists your enable/disable preference using the browser's storage API
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      BROWSER                                 │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────────┐ │
+│  │   Popup     │───▶│  Background │───▶│   Offscreen     │ │
+│  │  (popup.js) │    │  (Service   │    │   Document      │ │
+│  │             │◀───│   Worker)   │◀───│                 │ │
+│  └─────────────┘    └─────────────┘    └─────────────────┘ │
+│        │                   │                    │           │
+│        ▼                   ▼                    ▼           │
+│   User clicks         Power API           Battery API      │
+│   toggle button      (keep awake)        (monitoring)      │
+│                           │                    │           │
+│                           ▼                    ▼           │
+│                    Notifications         Audio Playback    │
+└─────────────────────────────────────────────────────────────┘
+```
 
-### Battery Monitoring
+### Step-by-Step Flow
 
-- Uses the Battery Status API to monitor battery level and charging state
-- Triggers notifications on battery level or charging status changes
-- Low battery warning: < 20% and not charging
-- Full battery alert: > 95% and charging
-
-### Sound Notifications
-
-- Uses the Offscreen API to play audio (required in Manifest V3)
-- Service workers cannot play audio directly, so an offscreen document handles playback
-- Custom notification sound plays alongside browser notifications
+1. **User clicks Enable** → `popup.js` sends message to `background.js`
+2. **Background activates** → Calls `chrome.power.requestKeepAwake('system')`
+3. **Offscreen document created** → Starts battery monitoring
+4. **Battery changes detected** → Offscreen sends update to background
+5. **Threshold reached** → Background triggers notification + sound
+6. **Sound plays** → Offscreen document plays audio 2x with 2s interval
 
 ## Project Structure
 
 ```
-├── manifest.json      # Extension configuration & permissions
-├── background.js      # Service worker - main logic, battery monitoring, notifications
-├── popup.html         # Extension popup UI (HTML)
-├── popup.js           # Popup UI controller (toggle, status display)
-├── offscreen.html     # Hidden document for audio playback
-├── offscreen.js       # Audio player script
+no-sleep-chrome-extension/
+├── manifest.json         # Extension configuration & permissions
+├── background.js         # Service worker - core logic
+├── popup.html            # Extension popup UI
+├── popup.js              # Popup controller & battery display
+├── offscreen.html        # Hidden document for audio/battery
+├── offscreen.js          # Audio player & battery monitor
 ├── sounds/
-│   └── notification.wav  # Notification sound file
+│   └── notification.wav  # Alert sound file
 ├── icons/
-│   ├── icon.svg       # Source icon
-│   ├── icon16.png     # 16x16 icon
-│   ├── icon32.png     # 32x32 icon
-│   ├── icon48.png     # 48x48 icon
-│   └── icon128.png    # 128x128 icon
-└── README.md          # This file
+│   ├── icon.svg          # Source vector icon
+│   ├── icon16.png        # Toolbar icon
+│   ├── icon32.png        # Medium icon
+│   ├── icon48.png        # Extension page icon
+│   └── icon128.png       # Store/install icon
+└── README.md             # This documentation
 ```
 
-## File Descriptions
+## Detailed File Descriptions
 
 ### `manifest.json`
 
-Extension configuration file that defines:
+**Purpose**: Extension configuration file required by all browser extensions.
 
-- Permissions: `power`, `notifications`, `storage`, `offscreen`
-- Background service worker registration
-- Popup action and icons
+**What it defines**:
+
+- `manifest_version: 3` - Uses latest extension standard
+- `permissions` - APIs the extension can access:
+  - `power` - Keep system awake
+  - `notifications` - Show desktop alerts
+  - `storage` - Save user preferences
+  - `offscreen` - Create hidden documents
+  - `alarms` - Schedule periodic tasks
+- `background.service_worker` - Registers background script
+- `action` - Popup UI and toolbar icons
+
+---
 
 ### `background.js`
 
-The main service worker that runs continuously:
+**Purpose**: The brain of the extension. Runs continuously as a service worker.
 
-- **State Management**: Tracks enabled/disabled state, battery info
-- **Power Control**: `enableNoSleep()` / `disableNoSleep()` functions
-- **Battery Monitoring**: `monitorBattery()` uses Battery API with event listeners
-- **Notifications**: `showNotification()` displays alerts with sound
-- **Offscreen Audio**: `setupOffscreenDocument()` and `playNotificationSound()` handle audio
-- **Keep Alive**: Uses browser alarms to prevent service worker termination
+**Key Functions**:
+| Function | What It Does |
+|----------|--------------|
+| `enableNoSleep()` | Calls Power API to prevent sleep, creates offscreen document |
+| `disableNoSleep()` | Releases keep-awake request |
+| `handleBatteryUpdate()` | Processes battery info, triggers notifications if thresholds met |
+| `showNotification()` | Displays notification and plays sound |
+| `setupOffscreenDocument()` | Creates hidden document for audio/battery |
+| `playNotificationSound()` | Sends play command to offscreen document |
+| `updateIconBadge()` | Shows/hides "ON" badge on toolbar icon |
 
-### `popup.html` & `popup.js`
+**Message Handlers**:
 
-The user interface when clicking the extension icon:
+- `toggle` - Enable/disable from popup
+- `getStatus` - Return current state to popup
+- `batteryUpdate` - Receive battery info from offscreen
+- `testNotification` - Trigger test alert
 
-- Shows current status (active/inactive)
-- Displays battery level and charging status
-- Toggle button to enable/disable
+---
 
-### `offscreen.html` & `offscreen.js`
+### `popup.html`
 
-Hidden document for audio playback (Manifest V3 requirement):
+**Purpose**: The UI that appears when you click the extension icon.
 
-- Receives `playSound` messages from background script
-- Plays the notification.wav file
-- Required because service workers cannot access Audio API
+**Elements**:
+
+- Title with lightning bolt icon
+- Status box showing active/inactive state
+- Battery level and charging status
+- Enable/Disable toggle button (green/red)
+- Test Notification button
+- Info text explaining the extension
+
+**Styling**: Purple gradient background, modern rounded cards, smooth button animations.
+
+---
+
+### `popup.js`
+
+**Purpose**: Controls the popup UI and handles user interactions.
+
+**What it does**:
+
+1. Loads current enabled state from background
+2. Fetches battery info directly (Battery API works in popup context)
+3. Handles toggle button clicks
+4. Handles test notification button
+5. Updates UI to reflect current state
+
+---
+
+### `offscreen.html`
+
+**Purpose**: A hidden HTML document that runs in a window context (not a service worker).
+
+**Why it exists**: Service workers in Manifest V3 cannot:
+
+- Play audio (no Audio API)
+- Access Battery API
+
+This document provides those capabilities.
+
+**Contents**: Just an audio element and script reference.
+
+---
+
+### `offscreen.js`
+
+**Purpose**: Handles audio playback and battery monitoring.
+
+**Key Functions**:
+| Function | What It Does |
+|----------|--------------|
+| `playNotificationSound()` | Plays sound 2 times with 2-second interval |
+| `startBatteryMonitoring()` | Watches battery level/charging via Battery API |
+| `checkBattery()` | Sends battery updates to background script |
+
+**Message Handlers**:
+
+- `playSound` - Trigger audio playback
+- `startBatteryMonitoring` - Begin watching battery
+- `getBattery` - Return current battery state
+
+---
+
+### `sounds/notification.wav`
+
+**Purpose**: The alert sound that plays with notifications.
+
+**Behavior**: Plays 2 times with a 2-second gap between plays.
+
+---
+
+### `icons/`
+
+**Purpose**: Extension icons for various contexts.
+
+| File        | Size    | Used For                  |
+| ----------- | ------- | ------------------------- |
+| icon16.png  | 16×16   | Toolbar icon              |
+| icon32.png  | 32×32   | Windows taskbar           |
+| icon48.png  | 48×48   | Extensions page           |
+| icon128.png | 128×128 | Web store, install dialog |
+| icon.svg    | Vector  | Source file               |
 
 ## Installation
 
 ### For Microsoft Edge
 
-1. Open Edge and navigate to `edge://extensions/`
-2. Enable "Developer mode" (toggle in left sidebar)
-3. Click "Load unpacked"
-4. Select this extension folder
-5. The extension icon should appear in your toolbar
+1. Navigate to `edge://extensions/`
+2. Enable **Developer mode** (left sidebar)
+3. Click **Load unpacked**
+4. Select the extension folder
+5. Pin the extension to your toolbar
 
 ### For Google Chrome
 
-1. Open Chrome and navigate to `chrome://extensions/`
-2. Enable "Developer mode" (toggle in top-right corner)
-3. Click "Load unpacked"
-4. Select this extension folder
-5. The extension icon should appear in your toolbar
-
-### Icons Setup
-
-The extension requires PNG icons. You can:
-
-- Convert `icons/icon.svg` to PNG (16x16, 32x32, 48x48, 128x128)
-- Or use any icon images named `icon16.png`, `icon32.png`, etc.
+1. Navigate to `chrome://extensions/`
+2. Enable **Developer mode** (top-right)
+3. Click **Load unpacked**
+4. Select the extension folder
+5. Pin the extension to your toolbar
 
 ## Usage
 
-1. Click the extension icon in your toolbar
-2. Click "Enable" to prevent your computer from sleeping
-3. The status shows "Active - Computer Won't Sleep"
-4. Battery info displays if available
-5. Click "Disable" to allow normal sleep behavior
+1. **Click the extension icon** in your toolbar
+2. **Click "Enable"** to prevent sleep
+3. **Green "ON" badge** appears on the icon
+4. **Use "Test Notification"** to verify sound works
+5. **Click "Disable"** when done
 
-You'll receive sound notifications when:
+### Notifications You'll Receive
 
-- 🔋 Battery drops below 20% (not charging)
-- 🔌 Battery exceeds 95% (while charging)
-- ⚡ You toggle the extension on/off
+| Trigger         | When                | Message                                          |
+| --------------- | ------------------- | ------------------------------------------------ |
+| 🔋 Low Battery  | < 20% and unplugged | "Consider charging your device"                  |
+| 🔌 Full Battery | > 95% and charging  | "Consider unplugging to preserve battery health" |
+| ⚡ Toggle On    | Extension enabled   | "Your computer will stay awake"                  |
+| ⚡ Toggle Off   | Extension disabled  | "Your computer can sleep normally"               |
 
 ## Permissions Explained
 
-| Permission      | Purpose                                   |
-| --------------- | ----------------------------------------- |
-| `power`         | Prevent system from sleeping              |
-| `notifications` | Display system notifications              |
-| `storage`       | Save enable/disable preference            |
-| `offscreen`     | Create hidden document for audio playback |
+| Permission      | Why Needed                                    |
+| --------------- | --------------------------------------------- |
+| `power`         | Core functionality - prevents system sleep    |
+| `notifications` | Show alerts for battery and status changes    |
+| `storage`       | Remember enabled/disabled state               |
+| `offscreen`     | Create hidden document for audio & battery    |
+| `alarms`        | Keep service worker alive with periodic pings |
 
 ## Technical Details
 
-- **Manifest Version**: 3 (latest extension standard)
-- **Compatibility**: Chrome, Edge, and Chromium-based browsers
-- **Service Worker**: Persistent background script
-- **APIs Used**:
-  - Power API
-  - Notifications API
-  - Storage API
-  - Offscreen API
-  - Battery Status API (Web API)
-  - Alarms API
+- **Manifest Version**: 3 (latest standard)
+- **Compatibility**: Chrome 109+, Edge 109+, Brave, Opera, Vivaldi
+- **Service Worker**: Persistent via alarms (1-minute keepalive)
+- **Sound Loop**: 2 plays × 2-second interval
+
+### APIs Used
+
+| API                      | Purpose                                     |
+| ------------------------ | ------------------------------------------- |
+| Chrome Power API         | `requestKeepAwake()` / `releaseKeepAwake()` |
+| Chrome Notifications API | Desktop notifications                       |
+| Chrome Storage API       | Persist user preferences                    |
+| Chrome Offscreen API     | Create hidden document                      |
+| Chrome Alarms API        | Keep service worker active                  |
+| Chrome Action API        | Toolbar badge ("ON" indicator)              |
+| Web Battery API          | Monitor battery level/charging              |
+| Web Audio API            | Play notification sounds                    |
+
+## Troubleshooting
+
+| Issue                       | Solution                                 |
+| --------------------------- | ---------------------------------------- |
+| Extension blocked by policy | Use personal browser profile or try Edge |
+| No sound playing            | Check system volume, test with button    |
+| Battery info not showing    | Only works on laptops with batteries     |
+| Icon not visible            | Click puzzle icon → pin the extension    |
+| Notifications not appearing | Check browser notification settings      |
 
 ## Notes
 
-- Extension only works when the browser is running
-- Battery API may not work on desktop PCs without batteries
-- Service worker stays active using periodic alarms (1-minute interval)
-- Sound plays through offscreen document (Manifest V3 limitation)
-- Works on Chrome, Edge, Brave, and other Chromium browsers
+- Extension only works while browser is running
+- Desktop PCs without batteries won't show battery info
+- Sound requires offscreen document (Manifest V3 limitation)
+- Works on all Chromium-based browsers
 
 ## License
 
