@@ -82,6 +82,25 @@
         opacity: 0.8;
         line-height: 1.4;
       }
+
+      .test-btn {
+        width: 100%;
+        padding: 10px;
+        margin-top: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 8px;
+        cursor: pointer;
+        background: transparent;
+        color: white;
+        transition: all 0.3s ease;
+      }
+
+      .test-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: white;
+      }
     </style>
   </head>
   <body>
@@ -94,6 +113,8 @@
       </div>
 
       <button class="toggle-btn" id="toggleBtn">Loading...</button>
+
+      <button class="test-btn" id="testBtn">🔔 Test Notification</button>
 
       <div class="info">
         Prevents your computer from sleeping while enabled. Works across all

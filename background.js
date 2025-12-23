@@ -7,6 +7,7 @@ let batteryInfo = null;
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.get(["enabled"], (result) => {
     isEnabled = result.enabled || false;
+    updateIconBadge();
     if (isEnabled) {
       enableNoSleep();
     }
@@ -16,12 +17,13 @@ chrome.runtime.onInstalled.addListener(() => {
 // Load state when service worker starts
 chrome.storage.local.get(["enabled"], (result) => {
   isEnabled = result.enabled || false;
+  updateIconBadge();
   if (isEnabled) {
     enableNoSleep();
   }
 });
 
-// Listen for messages from popup
+// Listen for messages from popup and offscreen document
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "toggle") {
     isEnabled = request.enabled;
@@ -38,18 +40,79 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ success: true, enabled: isEnabled });
   } else if (request.action === "getStatus") {
     sendResponse({ enabled: isEnabled, battery: batteryInfo });
+  } else if (request.action === "batteryUpdate") {
+    // Handle battery updates from offscreen document
+    handleBatteryUpdate(request.level, request.charging);
+    sendResponse({ success: true });
+  } else if (request.action === "testNotification") {
+    // Test notification with sound
+    showNotification(
+      "Test Notification",
+      "Sound and notification are working! 🔔"
+    );
+    sendResponse({ success: true });
   }
   return true;
 });
 
+// Track if we've already shown notifications to avoid spam
+let lowBatteryNotified = false;
+let fullBatteryNotified = false;
+
+// Handle battery updates from offscreen document
+function handleBatteryUpdate(level, charging) {
+  batteryInfo = { level, charging };
+  console.log("Battery update:", batteryInfo);
+
+  if (!isEnabled) return;
+
+  // Low battery warning (< 20% and not charging)
+  if (level < 20 && !charging) {
+    if (!lowBatteryNotified) {
+      showNotification(
+        "Low Battery Warning",
+        `Battery is at ${level}%. Consider charging your device.`
+      );
+      lowBatteryNotified = true;
+    }
+  } else {
+    lowBatteryNotified = false; // Reset when condition changes
+  }
+
+  // Full battery alert (> 95% and charging)
+  if (level > 95 && charging) {
+    if (!fullBatteryNotified) {
+      showNotification(
+        "Battery Almost Full",
+        `Battery is at ${level}%. Consider unplugging to preserve battery health.`
+      );
+      fullBatteryNotified = true;
+    }
+  } else {
+    fullBatteryNotified = false; // Reset when condition changes
+  }
+}
+
+// Update toolbar icon badge to show active/inactive state
+function updateIconBadge() {
+  if (isEnabled) {
+    chrome.action.setBadgeText({ text: "ON" });
+    chrome.action.setBadgeBackgroundColor({ color: "#10b981" }); // Green
+  } else {
+    chrome.action.setBadgeText({ text: "" }); // No badge when off
+    chrome.action.setBadgeBackgroundColor({ color: "#ef4444" }); // Red
+  }
+}
+
 // Enable no-sleep mode
-function enableNoSleep() {
+async function enableNoSleep() {
   // Request system to stay awake (prevents display and system from sleeping)
   chrome.power.requestKeepAwake("system");
   console.log("No Sleep mode enabled");
+  updateIconBadge();
 
-  // Start monitoring battery
-  monitorBattery();
+  // Start battery monitoring via offscreen document
+  await setupOffscreenDocument();
 }
 
 // Disable no-sleep mode
@@ -57,54 +120,7 @@ function disableNoSleep() {
   // Release keep awake request
   chrome.power.releaseKeepAwake();
   console.log("No Sleep mode disabled");
-}
-
-// Monitor battery status using Battery API
-async function monitorBattery() {
-  if (!navigator.getBattery) {
-    console.log("Battery API not supported");
-    return;
-  }
-
-  try {
-    const battery = await navigator.getBattery();
-
-    function updateBatteryInfo() {
-      batteryInfo = {
-        level: Math.round(battery.level * 100),
-        charging: battery.charging,
-        chargingTime: battery.chargingTime,
-        dischargingTime: battery.dischargingTime,
-      };
-
-      console.log("Battery:", batteryInfo);
-
-      // Show notification if battery is low and not charging
-      if (isEnabled && batteryInfo.level < 20 && !batteryInfo.charging) {
-        showNotification(
-          "Low Battery Warning",
-          `Battery is at ${batteryInfo.level}%. Consider charging your device.`
-        );
-      }
-
-      // Show notification if battery is charging and above 95%
-      if (isEnabled && batteryInfo.level > 95 && batteryInfo.charging) {
-        showNotification(
-          "Battery Almost Full",
-          `Battery is at ${batteryInfo.level}%. Consider unplugging to preserve battery health.`
-        );
-      }
-    }
-
-    // Initial update
-    updateBatteryInfo();
-
-    // Listen for battery changes
-    battery.addEventListener("levelchange", updateBatteryInfo);
-    battery.addEventListener("chargingchange", updateBatteryInfo);
-  } catch (error) {
-    console.error("Error accessing battery:", error);
-  }
+  updateIconBadge();
 }
 
 // Show notification with sound
