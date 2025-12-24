@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About - No Sleep Extension</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        min-height: 100vh;
+        color: #e4e4e7;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 50px;
+      }
+
+      .logo {
+        font-size: 64px;
+        margin-bottom: 16px;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(90deg, #10b981, #3b82f6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
+      }
+
+      .version {
+        color: #a1a1aa;
+        font-size: 0.9rem;
+      }
+
+      .tagline {
+        color: #a1a1aa;
+        font-size: 1.1rem;
+        margin-top: 12px;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        padding: 28px;
+        margin-bottom: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+      }
+
+      .card h2 {
+        font-size: 1.3rem;
+        margin-bottom: 16px;
+        color: #f4f4f5;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .card h2 span {
+        font-size: 1.4rem;
+      }
+
+      .feature-list {
+        list-style: none;
+      }
+
+      .feature-list li {
+        padding: 10px 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .feature-list li:last-child {
+        border-bottom: none;
+      }
+
+      .feature-list .icon {
+        color: #10b981;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+      }
+
+      .feature-list .text {
+        color: #d4d4d8;
+      }
+
+      .feature-list .text strong {
+        color: #f4f4f5;
+      }
+
+      .use-cases {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+      }
+
+      .use-case {
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+      }
+
+      .use-case .emoji {
+        font-size: 2rem;
+        margin-bottom: 8px;
+      }
+
+      .use-case .title {
+        font-weight: 600;
+        color: #f4f4f5;
+        margin-bottom: 4px;
+      }
+
+      .use-case .desc {
+        font-size: 0.85rem;
+        color: #a1a1aa;
+      }
+
+      .how-to-use {
+        counter-reset: step;
+      }
+
+      .how-to-use li {
+        padding: 12px 0;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .how-to-use li:last-child {
+        border-bottom: none;
+      }
+
+      .how-to-use li::before {
+        counter-increment: step;
+        content: counter(step);
+        background: linear-gradient(135deg, #10b981, #3b82f6);
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      .battery-alerts {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .alert-box {
+        flex: 1;
+        min-width: 200px;
+        padding: 16px;
+        border-radius: 12px;
+        text-align: center;
+      }
+
+      .alert-box.low {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
+
+      .alert-box.full {
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+      }
+
+      .alert-box .emoji {
+        font-size: 2rem;
+        margin-bottom: 8px;
+      }
+
+      .alert-box .threshold {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f4f4f5;
+      }
+
+      .alert-box .desc {
+        font-size: 0.85rem;
+        color: #a1a1aa;
+        margin-top: 4px;
+      }
+
+      footer {
+        text-align: center;
+        margin-top: 40px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        color: #71717a;
+        font-size: 0.9rem;
+      }
+
+      footer a {
+        color: #3b82f6;
+        text-decoration: none;
+      }
+
+      footer a:hover {
+        text-decoration: underline;
+      }
+
+      .tech-stack {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .tech-tag {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: #d4d4d8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="logo">⚡</div>
+        <h1>No Sleep Extension</h1>
+        <div class="version">Version 1.0.0</div>
+        <p class="tagline">Keep your computer awake when you need it most</p>
+      </header>
+
+      <div class="card">
+        <h2><span>🎯</span> What It Does</h2>
+        <p style="color: #d4d4d8; margin-bottom: 20px">
+          This extension prevents your computer from sleeping by keeping the browser active in the
+          background. Perfect for long downloads, presentations, or monitoring dashboards.
+        </p>
+        <div class="use-cases">
+          <div class="use-case">
+            <div class="emoji">📥</div>
+            <div class="title">Downloads</div>
+            <div class="desc">Keep large files downloading</div>
+          </div>
+          <div class="use-case">
+            <div class="emoji">📊</div>
+            <div class="title">Dashboards</div>
+            <div class="desc">Monitor without interruption</div>
+          </div>
+          <div class="use-case">
+            <div class="emoji">🎬</div>
+            <div class="title">Presentations</div>
+            <div class="desc">Screen stays on during talks</div>
+          </div>
+          <div class="use-case">
+            <div class="emoji">⚙️</div>
+            <div class="title">Long Tasks</div>
+            <div class="desc">Run processes overnight</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span>✨</span> Features</h2>
+        <ul class="feature-list">
+          <li>
+            <span class="icon">✓</span>
+            <span class="text"
+              ><strong>Background Operation</strong> — Works even when popup is closed</span
+            >
+          </li>
+          <li>
+            <span class="icon">✓</span>
+            <span class="text"
+              ><strong>Toolbar Badge</strong> — Shows "ON" indicator when active</span
+            >
+          </li>
+          <li>
+            <span class="icon">✓</span>
+            <span class="text"
+              ><strong>Battery Monitoring</strong> — Real-time battery level display</span
+            >
+          </li>
+          <li>
+            <span class="icon">✓</span>
+            <span class="text"
+              ><strong>Sound Notifications</strong> — Audio alerts play 3x with 1-second
+              intervals</span
+            >
+          </li>
+          <li>
+            <span class="icon">✓</span>
+            <span class="text"
+              ><strong>Persistent Settings</strong> — Remembers your preference after restart</span
+            >
+          </li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2><span>🔋</span> Battery Alerts</h2>
+        <p style="color: #d4d4d8; margin-bottom: 16px">
+          Get notified when your battery needs attention:
+        </p>
+        <div class="battery-alerts">
+          <div class="alert-box low">
+            <div class="emoji">🪫</div>
+            <div class="threshold">&lt; 30%</div>
+            <div class="desc">Low battery warning<br />(when not charging)</div>
+          </div>
+          <div class="alert-box full">
+            <div class="emoji">🔋</div>
+            <div class="threshold">&gt; 95%</div>
+            <div class="desc">Full battery alert<br />(when charging)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span>📖</span> How to Use</h2>
+        <ol class="how-to-use">
+          <li>Click the extension icon in your browser toolbar</li>
+          <li>Toggle the switch to enable "No Sleep" mode</li>
+          <li>The badge will show "ON" when active</li>
+          <li>Your computer will stay awake until you disable it</li>
+          <li>Use the Test button to verify notifications work</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h2><span>🛠️</span> Technology</h2>
+        <p style="color: #d4d4d8">Built with Chrome Extension Manifest V3 using modern web APIs.</p>
+        <div class="tech-stack">
+          <span class="tech-tag">Manifest V3</span>
+          <span class="tech-tag">Chrome Power API</span>
+          <span class="tech-tag">Battery Status API</span>
+          <span class="tech-tag">Notifications API</span>
+          <span class="tech-tag">Service Workers</span>
+          <span class="tech-tag">Offscreen Documents</span>
+        </div>
+      </div>
+
+      <footer>
+        <p>Made with ❤️ for productivity</p>
+        <p style="margin-top: 8px">Works with Chrome, Edge, and Chromium-based browsers</p>
+      </footer>
+    </div>
+  </body>
+</html>

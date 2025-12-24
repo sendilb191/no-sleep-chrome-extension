@@ -31,10 +31,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     if (isEnabled) {
       enableNoSleep();
-      showNotification("No Sleep Enabled", "Your computer will stay awake");
+      showNotificationOnce("No Sleep Enabled", "Your computer will stay awake");
     } else {
       disableNoSleep();
-      showNotification("No Sleep Disabled", "Your computer can sleep normally");
+      showNotificationOnce("No Sleep Disabled", "Your computer can sleep normally");
     }
 
     sendResponse({ success: true, enabled: isEnabled });
@@ -46,10 +46,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ success: true });
   } else if (request.action === "testNotification") {
     // Test notification with sound
-    showNotification(
-      "Test Notification",
-      "Sound and notification are working! 🔔"
-    );
+    showNotification("Test Notification", "Sound and notification are working! 🔔");
     sendResponse({ success: true });
   }
   return true;
@@ -66,8 +63,8 @@ function handleBatteryUpdate(level, charging) {
 
   if (!isEnabled) return;
 
-  // Low battery warning (< 20% and not charging)
-  if (level < 20 && !charging) {
+  // Low battery warning (< 30% and not charging)
+  if (level < 30 && !charging) {
     if (!lowBatteryNotified) {
       showNotification(
         "Low Battery Warning",
@@ -96,10 +93,10 @@ function handleBatteryUpdate(level, charging) {
 // Update toolbar icon badge to show active/inactive state
 function updateIconBadge() {
   if (isEnabled) {
-    chrome.action.setBadgeText({ text: "ON" });
+    chrome.action.setBadgeText({ text: "●" });
     chrome.action.setBadgeBackgroundColor({ color: "#10b981" }); // Green
   } else {
-    chrome.action.setBadgeText({ text: "" }); // No badge when off
+    chrome.action.setBadgeText({ text: "●" });
     chrome.action.setBadgeBackgroundColor({ color: "#ef4444" }); // Red
   }
 }
@@ -113,10 +110,7 @@ function isPowerApiSupported() {
 async function enableNoSleep() {
   if (!isPowerApiSupported()) {
     console.error("chrome.power API is not supported in this browser");
-    showNotification(
-      "Not Supported",
-      "This browser doesn't support the power API"
-    );
+    showNotification("Not Supported", "This browser doesn't support the power API");
     return;
   }
 
@@ -137,14 +131,26 @@ function disableNoSleep() {
   updateIconBadge();
 }
 
-// Show notification with sound
+// Show notification with sound played once (for toggle on/off)
+async function showNotificationOnce(title, message) {
+  await playNotificationSoundOnce();
+
+  chrome.notifications.create({
+    type: "basic",
+    iconUrl: "assets/icons/icon128.png",
+    title: title,
+    message: message,
+    priority: 2,
+  });
+}
+
+// Show notification with sound played 3 times (for battery alerts)
 async function showNotification(title, message) {
-  // Play notification sound
   await playNotificationSound();
 
   chrome.notifications.create({
     type: "basic",
-    iconUrl: "icons/icon128.png",
+    iconUrl: "assets/icons/icon128.png",
     title: title,
     message: message,
     priority: 2,
@@ -167,7 +173,7 @@ async function setupOffscreenDocument() {
     await creatingOffscreen;
   } else {
     creatingOffscreen = chrome.offscreen.createDocument({
-      url: "offscreen.html",
+      url: "src/offscreen/offscreen.html",
       reasons: ["AUDIO_PLAYBACK"],
       justification: "Playing notification sound",
     });
@@ -176,11 +182,21 @@ async function setupOffscreenDocument() {
   }
 }
 
-// Play notification sound via offscreen document
+// Play notification sound 3 times via offscreen document (for battery alerts)
 async function playNotificationSound() {
   try {
     await setupOffscreenDocument();
     await chrome.runtime.sendMessage({ action: "playSound" });
+  } catch (error) {
+    console.log("Could not play sound:", error);
+  }
+}
+
+// Play notification sound once via offscreen document (for toggle on/off)
+async function playNotificationSoundOnce() {
+  try {
+    await setupOffscreenDocument();
+    await chrome.runtime.sendMessage({ action: "playSoundOnce" });
   } catch (error) {
     console.log("Could not play sound:", error);
   }

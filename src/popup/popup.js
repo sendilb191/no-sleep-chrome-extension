@@ -2,6 +2,7 @@
 
 const toggleBtn = document.getElementById("toggleBtn");
 const statusText = document.getElementById("statusText");
+const statusDot = document.getElementById("statusDot");
 const batteryInfo = document.getElementById("batteryInfo");
 const testBtn = document.getElementById("testBtn");
 
@@ -51,24 +52,23 @@ toggleBtn.addEventListener("click", () => {
   const currentEnabled = toggleBtn.classList.contains("enabled");
   const newEnabled = !currentEnabled;
 
-  chrome.runtime.sendMessage(
-    { action: "toggle", enabled: newEnabled },
-    (response) => {
-      if (response.success) {
-        updateUI(response.enabled);
-      }
+  chrome.runtime.sendMessage({ action: "toggle", enabled: newEnabled }, (response) => {
+    if (response.success) {
+      updateUI(response.enabled);
     }
-  );
+  });
 });
 
 // Update UI based on status
 function updateUI(enabled) {
   if (enabled) {
-    statusText.textContent = "🟢 Active - Computer Won't Sleep";
+    statusText.textContent = "Active - Computer Won't Sleep";
+    statusDot.className = "status-dot active";
     toggleBtn.textContent = "Disable";
     toggleBtn.className = "toggle-btn enabled";
   } else {
-    statusText.textContent = "🔴 Inactive - Normal Sleep Mode";
+    statusText.textContent = "Inactive - Normal Sleep Mode";
+    statusDot.className = "status-dot inactive";
     toggleBtn.textContent = "Enable";
     toggleBtn.className = "toggle-btn disabled";
   }

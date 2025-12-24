@@ -7,6 +7,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "playSound") {
     playNotificationSound();
     sendResponse({ success: true });
+  } else if (request.action === "playSoundOnce") {
+    playNotificationSoundOnce();
+    sendResponse({ success: true });
   } else if (request.action === "startBatteryMonitoring") {
     startBatteryMonitoring();
     sendResponse({ success: true });
@@ -19,8 +22,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 function playNotificationSound() {
   const audio = document.getElementById("notificationSound");
   let playCount = 0;
-  const maxPlays = 2;
-  const interval = 2000; // 2 seconds
+  const maxPlays = 3;
+  const interval = 1000; // 1 second
 
   function playOnce() {
     audio.currentTime = 0;
@@ -35,6 +38,14 @@ function playNotificationSound() {
   }
 
   playOnce();
+}
+
+function playNotificationSoundOnce() {
+  const audio = document.getElementById("notificationSound");
+  audio.currentTime = 0;
+  audio.play().catch((error) => {
+    console.error("Error playing sound:", error);
+  });
 }
 
 // Monitor battery and send alerts to background script
